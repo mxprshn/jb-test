@@ -3,6 +3,7 @@ package com.example.jbtest
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -11,6 +12,7 @@ import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.Scope
 import com.google.android.gms.tasks.Task
 import com.google.api.services.drive.DriveScopes
+import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -27,6 +29,7 @@ class MainActivity : AppCompatActivity() {
 
         val signInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestScopes(Scope(DriveScopes.DRIVE_FILE))
+            .requestEmail()
             .build()
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, signInOptions)
@@ -51,7 +54,9 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
 
         if (requestCode == REQUEST_SIGN_IN) {
-            GoogleSignIn.getSignedInAccountFromIntent(data)
+                GoogleSignIn.getSignedInAccountFromIntent(data).addOnSuccessListener { googleAccount ->
+                    accountTextView.text = googleAccount.email
+            }
         }
     }
 }

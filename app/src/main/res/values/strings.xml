@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">jbtest</string>
+    <string name="app_name">Audio Recorder</string>
+    <string name="rec_text">Запись</string>
+    <string name="path_text">Путь</string>
 </resources>
