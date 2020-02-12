@@ -1,16 +1,19 @@
 package com.example.jbtest
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
-import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
@@ -19,12 +22,15 @@ import com.google.api.services.drive.DriveScopes
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
-
 class MainActivity : AppCompatActivity() {
+
+    //private var accountInfoViewModel by lazy { ViewModelProviders.of(this).get(UserViewModel::class.java) }
 
     private lateinit var googleSignInClient : GoogleSignInClient
     private var googleSignInAccount : GoogleSignInAccount? = null
-    private lateinit var driveServiceHelper: DriveServiceHelper
+    private lateinit var driveUploader: DriveUploader
+    private val tempFolderPath = "/storage/emulated/0/Download/RecorderTemp"
+    private val voiceRecorder = VoiceRecorder(tempFolderPath)
 
     companion object {
         private const val REQUEST_SIGN_IN = 1
@@ -32,6 +38,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        //accountInfoViewModel = ViewModelProvider.
+
         setContentView(R.layout.activity_main)
 
         val signInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -41,7 +49,15 @@ class MainActivity : AppCompatActivity() {
 
         googleSignInClient = GoogleSignIn.getClient(this, signInOptions)
 
-        recordButton.setOnClickListener { uploadFile(recordButton.rootView) }
+        recordButton.setOnClickListener {
+            voiceRecorder.startRecording()
+        }
+
+        changePathButton.setOnClickListener {
+            val fileName = voiceRecorder.stopRecording()
+            driveUploader.uploadFile("${tempFolderPath}/${fileName}", fileName).addOnSuccessListener {
+                Toast.makeText(this, "Oho", Toast.LENGTH_LONG).show() }
+        }
     }
 
     override fun onStart() {
@@ -51,6 +67,14 @@ class MainActivity : AppCompatActivity() {
 
         if (googleSignInAccount == null) {
             signIn()
+        }
+        else {
+            val credential = GoogleAccountCredential.usingOAuth2(this, Collections.singleton(DriveScopes.DRIVE_FILE))
+            credential.setSelectedAccount(googleSignInAccount!!.account)
+            val googleDriveService = Drive.Builder(NetHttpTransport(), GsonFactory(), credential)
+                .setApplicationName("Audio Recorder").build()
+            //вынести
+            driveUploader = DriveUploader(googleDriveService)
         }
     }
 
@@ -70,14 +94,8 @@ class MainActivity : AppCompatActivity() {
                     val googleDriveService = Drive.Builder(NetHttpTransport(), GsonFactory(), credential)
                         .setApplicationName("Audio Recorder").build()
                     //вынести
-                    driveServiceHelper = DriveServiceHelper(googleDriveService)
+                    driveUploader = DriveUploader(googleDriveService)
             }
-        }
-    }
-
-    private fun uploadFile(view : View) {
-        driveServiceHelper.uploadFile().addOnFailureListener {
-            Log.i("OLOLO", "5")
         }
     }
 }
