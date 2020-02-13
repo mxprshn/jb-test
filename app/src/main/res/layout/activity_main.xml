@@ -8,38 +8,23 @@
     tools:context=".MainActivity">
 
     <ImageButton
-        android:id="@+id/changePathButton"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:adjustViewBounds="true"
-        android:background="#00FFFFFF"
-        android:cropToPadding="true"
-        android:scaleType="fitCenter"
-        android:text="@string/path_text"
-        app:layout_constraintBottom_toBottomOf="@+id/recordButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/recordButton"
-        app:layout_constraintTop_toTopOf="@+id/recordButton"
-        app:srcCompat="@drawable/ic_folder_button" />
-
-    <ImageButton
         android:id="@+id/recordButton"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
         android:adjustViewBounds="true"
-        android:background="#00FFFFFF"
+        android:background="?android:selectableItemBackground"
+        android:padding="3dp"
+        android:paddingStart="3dp"
         android:scaleType="fitCenter"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/changePathButton"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/microphoneImageView"
-        app:layout_constraintVertical_weight="2"
+        app:layout_constraintVertical_weight="1"
         app:srcCompat="@drawable/ic_rec_button" />
 
     <ImageView
@@ -58,8 +43,33 @@
         app:layout_constraintBottom_toTopOf="@id/recordButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_weight="8"
+        app:layout_constraintTop_toBottomOf="@+id/linkInput"
+        app:layout_constraintVertical_weight="7"
         app:srcCompat="@drawable/ic_microphone" />
+
+    <EditText
+        android:id="@+id/linkInput"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:backgroundTint="@color/colorPrimary"
+        android:ems="10"
+        android:hint="Google Drive folder link"
+        android:inputType="textUri|textPersonName"
+        android:shadowColor="@color/colorPrimary"
+        android:singleLine="false"
+        android:textAlignment="center"
+        android:textColor="@android:color/primary_text_dark"
+        android:textColorHighlight="@color/colorPrimary"
+        android:textColorHint="@color/colorPrimary"
+        android:textColorLink="@color/colorPrimary"
+        android:textCursorDrawable="@color/colorPrimary"
+        app:layout_constraintBottom_toTopOf="@id/microphoneImageView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_weight="1" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
