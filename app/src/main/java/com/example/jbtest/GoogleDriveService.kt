@@ -70,7 +70,6 @@ class GoogleDriveService(private val activity: Activity, private val listener: L
         listener.onSignIn(googleAccount.email.toString())
     }
 
-
     /// Checks if the user is already logged in.
     public fun checkLoginStatus() : Boolean {
         val account = GoogleSignIn.getLastSignedInAccount(activity)

@@ -38,8 +38,8 @@ class MainActivity : AppCompatActivity(), Listener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        checkPermissions()
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
-
         checkPermissions()
         tempFolderPath = applicationContext.filesDir.absolutePath
         settings = getSharedPreferences("settings", 0)
@@ -138,9 +138,8 @@ class MainActivity : AppCompatActivity(), Listener {
         val regex = Regex("(?<=id=)\\S+")
         val matchResults = regex.findAll(link)
         if (matchResults.count() == 0) {
-            Toast.makeText(this, "Invalid URL. Saving to the root folder.", Toast.LENGTH_LONG).show()
             return "root"
         }
-            return matchResults.last().value
+        return matchResults.last().value
     }
 }
