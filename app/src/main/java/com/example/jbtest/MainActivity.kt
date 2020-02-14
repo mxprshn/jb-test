@@ -1,41 +1,28 @@
 package com.example.jbtest
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
-import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModelProvider
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.Scope
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
-import com.google.api.client.http.javanet.NetHttpTransport
-import com.google.api.client.json.gson.GsonFactory
-import com.google.api.services.drive.Drive
-import com.google.api.services.drive.DriveScopes
 import kotlinx.android.synthetic.main.activity_main.*
-import java.util.*
+import java.io.File
 
-class MainActivity : AppCompatActivity(), GoogleDriveServiceListener {
+
+class MainActivity : AppCompatActivity(), Listener {
 
     private lateinit var googleDriveService: GoogleDriveService
-    private val tempFolderPath = "/storage/emulated/0/Download/RecorderTemp"
+    private lateinit var tempFolderPath : String
     private lateinit var voiceRecorder : VoiceRecorder
-    private var isRecordedAndUploaded = true
+    private var isReady = true
     private lateinit var settings : SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,9 +30,11 @@ class MainActivity : AppCompatActivity(), GoogleDriveServiceListener {
         setContentView(R.layout.activity_main)
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
+
         checkPermissions()
+        tempFolderPath = applicationContext.filesDir.absolutePath
         settings = getSharedPreferences("settings", 0)
-        voiceRecorder = VoiceRecorder(tempFolderPath)
+        voiceRecorder = VoiceRecorder(tempFolderPath, this)
         googleDriveService = GoogleDriveService(this, this)
 
         if (!googleDriveService.checkLoginStatus()){
@@ -53,17 +42,23 @@ class MainActivity : AppCompatActivity(), GoogleDriveServiceListener {
         }
 
         recordButton.setOnClickListener {
-            if (isRecordedAndUploaded) {
-                isRecordedAndUploaded = false
+            if (isReady) {
+                isReady = false
                 voiceRecorder.startRecording()
                 recordButton.setImageResource(R.drawable.ic_stop_rec_button)
             } else {
                 val fileName = voiceRecorder.stopRecording()
                 recordButton.isEnabled = false
-                googleDriveService.uploadFile("${tempFolderPath}/${fileName}", fileName, getFolderId(linkInput.text.toString())
+                val path = "${tempFolderPath}/${fileName}"
+                googleDriveService.uploadFile(path, fileName, getFolderId(linkInput.text.toString())
                 ).addOnSuccessListener {
+                    val myFile = File(path)
+                    if (myFile.exists()) {
+                        myFile.delete()
+                    }
                     recordButton.setImageResource(R.drawable.ic_rec_button)
                 }
+                Toast.makeText(this, "Uploading...", Toast.LENGTH_LONG).show()
             }
         }
 
@@ -93,19 +88,18 @@ class MainActivity : AppCompatActivity(), GoogleDriveServiceListener {
         googleDriveService.onActivityResult(requestCode, resultCode, data)
     }
 
-    override fun onSignIn() {
-    }
-
-    override fun onSignOut() {
-    }
-
-    override fun onActionCancel() {
+    override fun onSignIn(email : String) {
+        Toast.makeText(this, "Signed in to ${email}", Toast.LENGTH_LONG).show()
     }
 
     override fun onUploaded() {
-        isRecordedAndUploaded = true
+        isReady = true
         recordButton.isEnabled = true
         Toast.makeText(this, "Saved to Google Drive.", Toast.LENGTH_LONG).show()
+    }
+
+    override fun onError(exception: Exception, message: String) {
+        Toast.makeText(this, "ERROR: ${message}", Toast.LENGTH_LONG).show()
     }
 
     private fun checkPermissions() {
@@ -113,8 +107,7 @@ class MainActivity : AppCompatActivity(), GoogleDriveServiceListener {
             ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED ||
             ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
             ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS) != PackageManager.PERMISSION_GRANTED
-        ) {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS) != PackageManager.PERMISSION_GRANTED) {
             val permissions = arrayOf(
                 Manifest.permission.RECORD_AUDIO,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -127,12 +120,12 @@ class MainActivity : AppCompatActivity(), GoogleDriveServiceListener {
     }
 
     private fun getFolderId(link : String) : String {
-        val splitResult = link.split("/")
-        if (splitResult.isEmpty()) {
+        val regex = Regex("(?<=id=)\\S+")
+        val matchResults = regex.findAll(link)
+        if (matchResults.count() == 0) {
             Toast.makeText(this, "Invalid URL. Saving to the root folder.", Toast.LENGTH_LONG).show()
             return "root"
-        } else {
-            return splitResult.last()
         }
+            return matchResults.last().value
     }
 }

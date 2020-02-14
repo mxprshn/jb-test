@@ -5,7 +5,7 @@ import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
 
-class VoiceRecorder(public val saveFolderPath : String) {
+class VoiceRecorder(public val saveFolderPath : String, private val listener: Listener) {
 
     private val mediaRecorder = MediaRecorder()
     private val fileExtension = ".mp3"
@@ -31,7 +31,7 @@ class VoiceRecorder(public val saveFolderPath : String) {
             isRecording = true
         }
         catch (exc : Exception) {
-            exc.printStackTrace()
+            listener.onError(exc, "Recording error")
         }
     }
 
@@ -40,10 +40,9 @@ class VoiceRecorder(public val saveFolderPath : String) {
         try {
             mediaRecorder.stop()
             mediaRecorder.release()
-
         }
         catch (exc : Exception) {
-            exc.printStackTrace()
+            listener.onError(exc, "Recording error")
         }
         finally {
             isRecording = false

@@ -21,7 +21,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 
 
-class GoogleDriveService(private val activity: Activity, private val listener: GoogleDriveServiceListener) {
+class GoogleDriveService(private val activity: Activity, private val listener: Listener) {
 
     private val googleSignInClient : GoogleSignInClient
     private val googleAccountCredential = GoogleAccountCredential.usingOAuth2(activity, Collections.singleton(DriveScopes.DRIVE_FILE))
@@ -42,13 +42,11 @@ class GoogleDriveService(private val activity: Activity, private val listener: G
     }
 
     public fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == REQUEST_SIGN_IN)
+        if (requestCode == REQUEST_SIGN_IN) {
             if (data != null) {
                 signIn(data)
             }
-            else {
-
-            }
+        }
     }
 
     public fun initSignIn() = activity.startActivityForResult(googleSignInClient.signInIntent, REQUEST_SIGN_IN)
@@ -57,21 +55,13 @@ class GoogleDriveService(private val activity: Activity, private val listener: G
         GoogleSignIn.getSignedInAccountFromIntent(data).addOnSuccessListener {
             refreshAccountCredential(it)
         }.addOnFailureListener {
-
-            }
-    }
-
-    public fun signOut() {
-        googleSignInClient.signOut().addOnSuccessListener {
-            listener.onSignOut()
-        }.addOnFailureListener {
-
+            listener.onError(it, "Sign in error")
         }
     }
 
     private fun refreshAccountCredential(googleAccount : GoogleSignInAccount) {
         googleAccountCredential.selectedAccount = googleAccount.account
-        listener.onSignIn()
+        listener.onSignIn(googleAccount.email.toString())
     }
 
     public fun checkLoginStatus() : Boolean
@@ -98,7 +88,7 @@ class GoogleDriveService(private val activity: Activity, private val listener: G
         }).addOnSuccessListener {
             listener.onUploaded()
         }.addOnFailureListener {
-
+            listener.onError(it, "Upload error")
         }
     }
 }
