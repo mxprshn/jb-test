@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -16,15 +15,25 @@ import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
 
-
+// Class of the main app activity.
 class MainActivity : AppCompatActivity(), Listener {
 
+    /// Service for accessing Google Drive options.
     private lateinit var googleDriveService: GoogleDriveService
+
+    /// Path to the folder where audio records are saved before upload.
     private lateinit var tempFolderPath : String
+
+    /// VoiceRecorder used by the activity.
     private lateinit var voiceRecorder : VoiceRecorder
+
+    /// Shows that the app is ready to record and upload sound.
     private var isReady = true
+
+    /// Preferences of the app.
     private lateinit var settings : SharedPreferences
 
+    // Method invoked when activity created.
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -77,31 +86,36 @@ class MainActivity : AppCompatActivity(), Listener {
         })
     }
 
+    /// Method invoked when activity enters the Started state.
     override fun onStart() {
         super.onStart()
         linkInput.setText(settings.getString("folderLink", ""))
     }
 
+    /// Method for handling results got from other activities.
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
         googleDriveService.onActivityResult(requestCode, resultCode, data)
     }
 
+    /// Method invoked after signing in to Google account.
     override fun onSignIn(email : String) {
         Toast.makeText(this, "Signed in to ${email}", Toast.LENGTH_LONG).show()
     }
 
+    /// Method invoked when the file is successfully uploaded to Drive.
     override fun onUploaded() {
         isReady = true
         recordButton.isEnabled = true
         Toast.makeText(this, "Saved to Google Drive.", Toast.LENGTH_LONG).show()
     }
 
+    /// Method invoked when an error occurs in a notifier class.
     override fun onError(exception: Exception, message: String) {
         Toast.makeText(this, "ERROR: ${message}", Toast.LENGTH_LONG).show()
     }
 
+    /// Checks permissions necessary for the app and asks for them if they are not granted.
     private fun checkPermissions() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED ||
             ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED ||
@@ -119,6 +133,7 @@ class MainActivity : AppCompatActivity(), Listener {
         }
     }
 
+    /// Gets Google Drive folder id from its link.
     private fun getFolderId(link : String) : String {
         val regex = Regex("(?<=id=)\\S+")
         val matchResults = regex.findAll(link)

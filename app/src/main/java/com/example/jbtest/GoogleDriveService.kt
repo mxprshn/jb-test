@@ -20,13 +20,15 @@ import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 
-
+/// Service class for accessing Google Drive options.
 class GoogleDriveService(private val activity: Activity, private val listener: Listener) {
 
     private val googleSignInClient : GoogleSignInClient
     private val googleAccountCredential = GoogleAccountCredential.usingOAuth2(activity, Collections.singleton(DriveScopes.DRIVE_FILE))
     private val drive = Drive.Builder(NetHttpTransport(), GsonFactory(), googleAccountCredential)
         .setApplicationName(activity.resources.getString(R.string.app_name)).build()
+
+    /// Executor for file uploading.
     private val executor = Executors.newSingleThreadExecutor()
 
     init {
@@ -41,6 +43,7 @@ class GoogleDriveService(private val activity: Activity, private val listener: L
         const val REQUEST_SIGN_IN = 101
     }
 
+    /// Method for handling results got from activities.
     public fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == REQUEST_SIGN_IN) {
             if (data != null) {
@@ -49,8 +52,10 @@ class GoogleDriveService(private val activity: Activity, private val listener: L
         }
     }
 
+    /// Starts Google sign in activity.
     public fun initSignIn() = activity.startActivityForResult(googleSignInClient.signInIntent, REQUEST_SIGN_IN)
 
+    /// Signs in to Google account using information received from sign in intent.
     public fun signIn(data: Intent?) {
         GoogleSignIn.getSignedInAccountFromIntent(data).addOnSuccessListener {
             refreshAccountCredential(it)
@@ -59,23 +64,25 @@ class GoogleDriveService(private val activity: Activity, private val listener: L
         }
     }
 
+    /// Updates Google account credential with data from provided Google account.
     private fun refreshAccountCredential(googleAccount : GoogleSignInAccount) {
         googleAccountCredential.selectedAccount = googleAccount.account
         listener.onSignIn(googleAccount.email.toString())
     }
 
-    public fun checkLoginStatus() : Boolean
-    {
+
+    /// Checks if the user is already logged in.
+    public fun checkLoginStatus() : Boolean {
         val account = GoogleSignIn.getLastSignedInAccount(activity)
         val containsScope = account?.grantedScopes?.contains(Scope(DriveScopes.DRIVE_FILE))
         if (account != null && containsScope == true) {
             refreshAccountCredential(account)
             return true
-        } else {
-            return false
         }
+        return false
     }
 
+    /// Uploads file to Google Drive.
     public fun uploadFile(filePath : String, fileName : String, folderId : String) : Task<String> {
         return Tasks.call(executor, Callable {
             val fileInfo = File()

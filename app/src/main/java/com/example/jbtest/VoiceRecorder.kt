@@ -5,12 +5,18 @@ import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
 
+/// Class for recording audio from the device microphone.
 class VoiceRecorder(public val saveFolderPath : String, private val listener: Listener) {
 
     private val mediaRecorder = MediaRecorder()
+
+    /// Saved record files extension.
     private val fileExtension = ".mp3"
+
+    /// Name of the last saved record file.
     private var latestFileName = ""
 
+    /// Shows that audio is being recorded.
     public var isRecording : Boolean = false
         private set
 
@@ -20,8 +26,8 @@ class VoiceRecorder(public val saveFolderPath : String, private val listener: Li
         mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
     }
 
+    /// Starts recording audio from microphone.
     public fun startRecording() {
-
         try {
             latestFileName = "REC-${SimpleDateFormat("dd-MM-yyyy hh-mm-ss aa",
                 Locale.getDefault()).format(Date())}${fileExtension}"
@@ -35,8 +41,8 @@ class VoiceRecorder(public val saveFolderPath : String, private val listener: Li
         }
     }
 
+    /// Stops recording audio from microphone and returns the name of the saved file.
     public fun stopRecording() : String {
-
         try {
             mediaRecorder.stop()
             mediaRecorder.release()
@@ -47,7 +53,6 @@ class VoiceRecorder(public val saveFolderPath : String, private val listener: Li
         finally {
             isRecording = false
         }
-
         return latestFileName
     }
 }
