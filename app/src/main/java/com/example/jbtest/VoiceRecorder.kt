@@ -20,15 +20,12 @@ class VoiceRecorder(public val saveFolderPath : String, private val listener: Li
     public var isRecording : Boolean = false
         private set
 
-    init {
-        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC)
-        mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-        mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-    }
-
     /// Starts recording audio from microphone.
     public fun startRecording() {
         try {
+            mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC)
+            mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
             latestFileName = "REC-${SimpleDateFormat("dd-MM-yyyy hh-mm-ss aa",
                 Locale.getDefault()).format(Date())}${fileExtension}"
             mediaRecorder.setOutputFile("${saveFolderPath}/${latestFileName}")
@@ -45,7 +42,7 @@ class VoiceRecorder(public val saveFolderPath : String, private val listener: Li
     public fun stopRecording() : String {
         try {
             mediaRecorder.stop()
-            mediaRecorder.release()
+            mediaRecorder.reset()
         }
         catch (exc : Exception) {
             listener.onError(exc, "Recording error")
